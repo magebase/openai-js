@@ -101,7 +101,7 @@ class OpenAI extends OriginalOpenAI {
       });
 
       if (response.ok) {
-        cachedModels = await response.json();
+        cachedModels = (await response.json()) as ModelSnapshot;
         lastFetchTime = now;
       }
     } catch (error) {
@@ -136,7 +136,7 @@ class OpenAI extends OriginalOpenAI {
   private wrapChatCompletions(): void {
     const originalCreate = this.chat.completions.create.bind(this.chat.completions);
 
-    this.chat.completions.create = async (body: any, options?: any) => {
+    this.chat.completions.create = (async (body: any, options?: any) => {
       const startTime = Date.now();
       const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 
@@ -190,7 +190,7 @@ class OpenAI extends OriginalOpenAI {
 
         throw error;
       }
-    };
+    }) as typeof originalCreate;
   }
 
   private recordTelemetry(event: TelemetryEvent): void {
