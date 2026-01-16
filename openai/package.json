@@ -1,0 +1,62 @@
+{
+  "name": "@skew/openai",
+  "version": "1.0.0",
+  "description": "SKEW SDK for OpenAI - Telemetry and cost optimization",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "openai",
+    "skew",
+    "llm",
+    "cost-optimization",
+    "telemetry",
+    "ai",
+    "gpt",
+    "proxy"
+  ],
+  "author": "SKEW",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/skew-ai/skew-sdks.git",
+    "directory": "sdks/javascript/openai"
+  },
+  "homepage": "https://skew.ai/docs/sdk/javascript",
+  "bugs": {
+    "url": "https://github.com/skew-ai/skew-sdks/issues"
+  },
+  "peerDependencies": {
+    "openai": ">=4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "openai": "^4.28.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "vitest": "^1.2.0",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.18.0",
+    "@typescript-eslint/parser": "^6.18.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
