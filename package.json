@@ -6,7 +6,6 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "jest",
     "prepublishOnly": "npm run build"
   },
   "keywords": ["openai", "skew", "cost-optimization", "telemetry", "llm"],
