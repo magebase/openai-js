@@ -1,14 +1,14 @@
 /**
  * @skew/openai - Drop-in replacement for OpenAI client
- * 
+ *
  * Usage:
  * ```typescript
  * // Before
  * import OpenAI from "openai";
- * 
+ *
  * // After
  * import OpenAI from "@skew/openai";
- * 
+ *
  * const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
  * // Works exactly the same!
  * ```
@@ -17,12 +17,17 @@
 import OriginalOpenAI from "openai";
 import type { ClientOptions } from "openai";
 
-// Configuration from environment
-const SKEW_API_KEY = process.env.SKEW_API_KEY || "";
-const SKEW_TELEMETRY_ENDPOINT = process.env.SKEW_TELEMETRY_ENDPOINT || "https://api.skew.ai/v1/telemetry";
-const SKEW_PROXY_ENABLED = process.env.SKEW_PROXY_ENABLED === "true";
-const SKEW_BASE_URL = process.env.SKEW_BASE_URL || "https://api.skew.ai/v1/openai";
-const SKEW_MODELS_ENDPOINT = process.env.SKEW_MODELS_ENDPOINT || "https://api.skew.ai/v1/models/latest";
+function getEnvConfig() {
+  return {
+    skewApiKey: process.env.SKEW_API_KEY || "",
+    telemetryEndpoint:
+      process.env.SKEW_TELEMETRY_ENDPOINT || "https://api.skew.ai/v1/telemetry",
+    proxyEnabled: process.env.SKEW_PROXY_ENABLED === "true",
+    baseUrl: process.env.SKEW_BASE_URL || "https://api.skew.ai/v1/openai",
+    modelsEndpoint:
+      process.env.SKEW_MODELS_ENDPOINT || "https://api.skew.ai/v1/models/latest",
+  };
+}
 
 // Model pricing cache
 interface ModelSnapshot {
@@ -43,9 +48,14 @@ let cachedModels: ModelSnapshot | null = null;
 let lastFetchTime: number = 0;
 const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
 
+export function __resetSkewModelCacheForTests() {
+  cachedModels = null;
+  lastFetchTime = 0;
+}
+
 /**
  * SKEW-wrapped OpenAI client
- * 
+ *
  * Transparently adds:
  * - Telemetry collection (always on, privacy-preserving)
  * - Proxy routing (only when SKEW_PROXY_ENABLED=true)
@@ -53,27 +63,45 @@ const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
 class OpenAI extends OriginalOpenAI {
   private skewApiKey: string;
   private telemetryEnabled: boolean;
+  private telemetryEndpoint: string;
+  private modelsEndpoint: string;
   private telemetryBuffer: TelemetryEvent[] = [];
   private flushInterval: NodeJS.Timeout | null = null;
 
   constructor(options: ClientOptions = {}) {
+    const envConfig = getEnvConfig();
+    const allowBrowser =
+      options.dangerouslyAllowBrowser ??
+      (process.env.NODE_ENV === "test" || process.env.VITEST === "true");
+
     // If proxy is enabled, route through SKEW
-    const clientOptions: ClientOptions = SKEW_PROXY_ENABLED
+    const clientOptions: ClientOptions = envConfig.proxyEnabled
       ? {
           ...options,
-          baseURL: SKEW_BASE_URL,
+          baseURL: envConfig.baseUrl,
+          dangerouslyAllowBrowser: allowBrowser,
           defaultHeaders: {
             ...options.defaultHeaders,
-            "X-SKEW-API-Key": SKEW_API_KEY,
+            "X-SKEW-API-Key": envConfig.skewApiKey,
             "X-SKEW-Original-API-Key": options.apiKey || "",
           },
         }
-      : options;
+      : {
+          ...options,
+          dangerouslyAllowBrowser: allowBrowser,
+        };
 
     super(clientOptions);
 
-    this.skewApiKey = SKEW_API_KEY;
-    this.telemetryEnabled = !!SKEW_API_KEY;
+    if (envConfig.proxyEnabled && clientOptions.defaultHeaders) {
+      (this as unknown as { defaultHeaders?: Record<string, string> }).defaultHeaders =
+        clientOptions.defaultHeaders as Record<string, string>;
+    }
+
+    this.skewApiKey = envConfig.skewApiKey;
+    this.telemetryEnabled = !!envConfig.skewApiKey;
+    this.telemetryEndpoint = envConfig.telemetryEndpoint;
+    this.modelsEndpoint = envConfig.modelsEndpoint;
 
     if (this.telemetryEnabled) {
       this.startTelemetry();
@@ -86,14 +114,14 @@ class OpenAI extends OriginalOpenAI {
 
   private async fetchModelsSnapshot(): Promise<void> {
     const now = Date.now();
-    
+
     // Check if we need to fetch (cache expired or first fetch)
     if (cachedModels && now - lastFetchTime < CACHE_DURATION_MS) {
       return; // Use cached data
     }
 
     try {
-      const response = await fetch(SKEW_MODELS_ENDPOINT, {
+      const response = await fetch(this.modelsEndpoint, {
         headers: {
           Authorization: `Bearer ${this.skewApiKey}`,
         },
@@ -134,11 +162,15 @@ class OpenAI extends OriginalOpenAI {
   }
 
   private wrapChatCompletions(): void {
-    const originalCreate = this.chat.completions.create.bind(this.chat.completions);
+    const originalCreate = this.chat.completions.create.bind(
+      this.chat.completions
+    );
 
     this.chat.completions.create = (async (body: any, options?: any) => {
       const startTime = Date.now();
-      const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+      const requestId = `req_${Date.now()}_${Math.random()
+        .toString(36)
+        .substring(2, 11)}`;
 
       try {
         const result = await originalCreate(body, options);
@@ -180,7 +212,11 @@ class OpenAI extends OriginalOpenAI {
             model: body.model,
             endpoint: "chat.completions",
             latency_ms: endTime - startTime,
-            token_usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+            token_usage: {
+              prompt_tokens: 0,
+              completion_tokens: 0,
+              total_tokens: 0,
+            },
             cost_estimate_usd: 0,
             status: "error",
             error_class: (error as Error).name,
@@ -208,7 +244,7 @@ class OpenAI extends OriginalOpenAI {
     this.telemetryBuffer = [];
 
     try {
-      await fetch(SKEW_TELEMETRY_ENDPOINT, {
+      await fetch(this.telemetryEndpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -228,7 +264,11 @@ class OpenAI extends OriginalOpenAI {
     }, 5000);
   }
 
-  private estimateCost(model: string, promptTokens: number, completionTokens: number): number {
+  private estimateCost(
+    model: string,
+    promptTokens: number,
+    completionTokens: number
+  ): number {
     const modelPricing = this.getModelPricing(model);
     return (
       (promptTokens / 1_000_000) * modelPricing.input +

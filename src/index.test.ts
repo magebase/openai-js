@@ -1,12 +1,24 @@
-import OpenAI from "../src/index";
+// @ts-nocheck
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import OpenAI, { __resetSkewModelCacheForTests } from "./index";
 
 describe("@skew/openai", () => {
   let client: OpenAI;
+  let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
+    __resetSkewModelCacheForTests();
+    fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ models: [] }) });
+    vi.spyOn(globalThis, "fetch").mockImplementation(fetchMock as any);
+
     client = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY || "test-key",
+      dangerouslyAllowBrowser: true,
     });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("should create client successfully", () => {
@@ -18,8 +30,7 @@ describe("@skew/openai", () => {
   });
 
   it("should work identically to original OpenAI client", async () => {
-    // Mock to avoid actual API calls in tests
-    const mockCreate = jest.fn().mockResolvedValue({
+    const mockCreate = vi.fn().mockResolvedValue({
       id: "test",
       choices: [{ message: { content: "Hello" } }],
       usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
@@ -45,8 +56,11 @@ describe("@skew/openai", () => {
 
     const clientWithTelemetry = new OpenAI({
       apiKey: "test-key",
+      dangerouslyAllowBrowser: true,
     });
 
     expect(clientWithTelemetry).toBeInstanceOf(OpenAI);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(fetchMock).toHaveBeenCalled();
   });
 });
