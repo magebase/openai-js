@@ -2,4 +2,8 @@
  * Deprecated test file. Use langmesh.test.ts instead.
  */
 
-export {};
+import { describe, it } from "vitest";
+
+describe.skip("Deprecated", () => {
+	it("is deprecated", () => {});
+});
