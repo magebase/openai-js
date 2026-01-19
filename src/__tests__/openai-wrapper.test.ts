@@ -3,7 +3,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import OpenAI, { __resetlangmeshModelCacheForTests } from "../index";
+
+type OpenAIModule = typeof import("../index");
+let OpenAI: OpenAIModule["default"];
+let __resetlangmeshModelCacheForTests: OpenAIModule["__resetlangmeshModelCacheForTests"];
 
 const { mockCreate } = vi.hoisted(() => ({
   mockCreate: vi.fn(),
@@ -32,7 +35,12 @@ vi.mock("openai", () => ({
 }));
 
 describe("OpenAI wrapper telemetry", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    vi.resetModules();
+    ({
+      default: OpenAI,
+      __resetlangmeshModelCacheForTests,
+    } = await import("../index"));
     __resetlangmeshModelCacheForTests();
     mockCreate.mockReset();
     process.env.langmesh_API_KEY = "sk_test";
