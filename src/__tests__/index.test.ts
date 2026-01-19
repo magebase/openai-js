@@ -1,19 +1,19 @@
 // @ts-nocheck
 /**
- * SKEW SDK Tests - Comprehensive Test Suite
+ * langmesh SDK Tests - Comprehensive Test Suite
  *
  * Tests telemetry, model polling, cost estimation, and error handling
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import OpenAI, { __resetSkewModelCacheForTests } from "../index";
+import OpenAI, { __resetlangmeshModelCacheForTests } from "../index";
 import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat/completions";
 
-describe("SKEW OpenAI SDK", () => {
+describe("langmesh OpenAI SDK", () => {
   let fetchMock: any;
 
   beforeEach(() => {
-    __resetSkewModelCacheForTests();
+    __resetlangmeshModelCacheForTests();
     // Mock fetch globally
     fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -22,8 +22,8 @@ describe("SKEW OpenAI SDK", () => {
     global.fetch = fetchMock;
 
     // Reset environment
-    process.env.SKEW_API_KEY = "sk_test_123";
-    process.env.SKEW_PROXY_ENABLED = "false";
+    process.env.langmesh_API_KEY = "sk_test_123";
+    process.env.langmesh_PROXY_ENABLED = "false";
   });
 
   afterEach(() => {
@@ -39,7 +39,7 @@ describe("SKEW OpenAI SDK", () => {
       expect(client).toBeDefined();
     });
 
-    it("fetches model snapshot on init when SKEW_API_KEY is set", async () => {
+    it("fetches model snapshot on init when langmesh_API_KEY is set", async () => {
       fetchMock.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -68,12 +68,12 @@ describe("SKEW OpenAI SDK", () => {
           headers: expect.objectContaining({
             Authorization: "Bearer sk_test_123",
           }),
-        })
+        }),
       );
     });
 
-    it("does not fetch when SKEW_API_KEY is missing", () => {
-      delete process.env.SKEW_API_KEY;
+    it("does not fetch when langmesh_API_KEY is missing", () => {
+      delete process.env.langmesh_API_KEY;
 
       const client = new OpenAI({
         apiKey: "test-key",
@@ -163,8 +163,8 @@ describe("SKEW OpenAI SDK", () => {
   });
 
   describe("Telemetry", () => {
-    it("collects telemetry when SKEW_API_KEY is set", async () => {
-      process.env.SKEW_API_KEY = "sk_test_123";
+    it("collects telemetry when langmesh_API_KEY is set", async () => {
+      process.env.langmesh_API_KEY = "sk_test_123";
 
       const client = new OpenAI({
         apiKey: "test-key",
@@ -175,8 +175,8 @@ describe("SKEW OpenAI SDK", () => {
       expect((client as any).telemetryEnabled).toBe(true);
     });
 
-    it("does not collect telemetry when SKEW_API_KEY is missing", () => {
-      delete process.env.SKEW_API_KEY;
+    it("does not collect telemetry when langmesh_API_KEY is missing", () => {
+      delete process.env.langmesh_API_KEY;
 
       const client = new OpenAI({
         apiKey: "test-key",
@@ -234,18 +234,18 @@ describe("SKEW OpenAI SDK", () => {
   });
 
   describe("Proxy Mode", () => {
-    it("routes through SKEW proxy when enabled", () => {
-      process.env.SKEW_PROXY_ENABLED = "true";
-      process.env.SKEW_BASE_URL = "https://api.skew.ai/v1/openai";
+    it("routes through langmesh proxy when enabled", () => {
+      process.env.langmesh_PROXY_ENABLED = "true";
+      process.env.langmesh_BASE_URL = "https://api.langmesh.ai/v1/openai";
 
       const client = new OpenAI({ apiKey: "test-key" });
 
       // Should have modified base URL
-      expect((client as any).baseURL).toContain("skew.ai");
+      expect((client as any).baseURL).toContain("langmesh.ai");
     });
 
     it("uses OpenAI directly when proxy disabled", () => {
-      process.env.SKEW_PROXY_ENABLED = "false";
+      process.env.langmesh_PROXY_ENABLED = "false";
 
       const client = new OpenAI({
         apiKey: "test-key",
@@ -256,16 +256,16 @@ describe("SKEW OpenAI SDK", () => {
       expect((client as any).baseURL).toContain("openai.com");
     });
 
-    it("adds SKEW headers when proxy enabled", () => {
-      process.env.SKEW_PROXY_ENABLED = "true";
-      process.env.SKEW_API_KEY = "sk_live_123";
+    it("adds langmesh headers when proxy enabled", () => {
+      process.env.langmesh_PROXY_ENABLED = "true";
+      process.env.langmesh_API_KEY = "sk_live_123";
 
       const client = new OpenAI({ apiKey: "openai-key" });
 
-      // Should have SKEW headers
+      // Should have langmesh headers
       const headers = (client as any).defaultHeaders;
-      expect(headers["X-SKEW-API-Key"]).toBe("sk_live_123");
-      expect(headers["X-SKEW-Original-API-Key"]).toBe("openai-key");
+      expect(headers["X-langmesh-API-Key"]).toBe("sk_live_123");
+      expect(headers["X-langmesh-Original-API-Key"]).toBe("openai-key");
     });
   });
 
@@ -283,8 +283,8 @@ describe("SKEW OpenAI SDK", () => {
       fetchMock.mockImplementation(
         () =>
           new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Timeout")), 10)
-          )
+            setTimeout(() => reject(new Error("Timeout")), 10),
+          ),
       );
 
       const client = new OpenAI({ apiKey: "test-key" });
@@ -351,7 +351,8 @@ describe("SKEW OpenAI SDK", () => {
 
   describe("Configuration", () => {
     it("respects custom telemetry endpoint", () => {
-      process.env.SKEW_TELEMETRY_ENDPOINT = "https://custom.endpoint/telemetry";
+      process.env.langmesh_TELEMETRY_ENDPOINT =
+        "https://custom.endpoint/telemetry";
 
       const client = new OpenAI({ apiKey: "test-key" });
 
@@ -360,8 +361,8 @@ describe("SKEW OpenAI SDK", () => {
     });
 
     it("respects custom base URL", () => {
-      process.env.SKEW_PROXY_ENABLED = "true";
-      process.env.SKEW_BASE_URL = "https://custom.proxy/v1/openai";
+      process.env.langmesh_PROXY_ENABLED = "true";
+      process.env.langmesh_BASE_URL = "https://custom.proxy/v1/openai";
 
       const client = new OpenAI({ apiKey: "test-key" });
 
@@ -369,7 +370,7 @@ describe("SKEW OpenAI SDK", () => {
     });
 
     it("respects custom models endpoint", () => {
-      process.env.SKEW_MODELS_ENDPOINT = "https://custom/models";
+      process.env.langmesh_MODELS_ENDPOINT = "https://custom/models";
 
       fetchMock.mockResolvedValue({
         ok: true,
@@ -407,12 +408,12 @@ describe("SKEW OpenAI SDK", () => {
   describe("Integration", () => {
     it("works as drop-in replacement for OpenAI SDK", () => {
       // This is the key guarantee - should work identically
-      const skewClient = new OpenAI({ apiKey: "test-key" });
+      const langmeshClient = new OpenAI({ apiKey: "test-key" });
 
-      expect(skewClient).toBeDefined();
-      expect(skewClient.chat).toBeDefined();
-      expect(skewClient.chat.completions).toBeDefined();
-      expect(skewClient.chat.completions.create).toBeDefined();
+      expect(langmeshClient).toBeDefined();
+      expect(langmeshClient.chat).toBeDefined();
+      expect(langmeshClient.chat.completions).toBeDefined();
+      expect(langmeshClient.chat.completions.create).toBeDefined();
     });
   });
 });

@@ -1,5 +1,5 @@
 /**
- * SKEW OpenAI Wrapper
+ * langmesh OpenAI Wrapper
  *
  * Wraps the OpenAI client with telemetry and optional proxy support.
  *
@@ -12,8 +12,8 @@
 
 import type { OpenAI } from "openai";
 import type {
-  SkewConfig,
-  SkewWrapper,
+  langmeshConfig,
+  langmeshWrapper,
   TelemetryPayload,
   TelemetryRequest,
   TelemetryResponse,
@@ -40,12 +40,12 @@ interface FullConfig {
 }
 
 /**
- * Wrap an OpenAI client with SKEW telemetry and optional proxy
+ * Wrap an OpenAI client with langmesh telemetry and optional proxy
  */
-export function skewWrap<T extends OpenAI>(
+export function langmeshWrap<T extends OpenAI>(
   openaiClient: T,
-  config: SkewConfig
-): T & SkewWrapper<T> {
+  config: langmeshConfig,
+): T & langmeshWrapper<T> {
   const fullConfig: FullConfig = {
     apiKey: config.apiKey,
     orgId: config.orgId,
@@ -56,7 +56,7 @@ export function skewWrap<T extends OpenAI>(
 
   const telemetryClient = new TelemetryClient(
     fullConfig.apiKey,
-    fullConfig.telemetry
+    fullConfig.telemetry,
   );
 
   // If proxy is enabled, modify the base URL
@@ -69,7 +69,7 @@ export function skewWrap<T extends OpenAI>(
 
   const handler: ProxyHandler<T> = {
     get(target, prop, receiver) {
-      // Handle SKEW-specific methods
+      // Handle langmesh-specific methods
       if (prop === "unwrap") {
         return () => openaiClient;
       }
@@ -100,14 +100,14 @@ export function skewWrap<T extends OpenAI>(
     },
   };
 
-  return new Proxy(openaiClient, handler) as T & SkewWrapper<T>;
+  return new Proxy(openaiClient, handler) as T & langmeshWrapper<T>;
 }
 
 function wrapNamespace(
   namespace: object,
   telemetryClient: TelemetryClient,
   config: FullConfig,
-  proxyActive: boolean
+  proxyActive: boolean,
 ): object {
   const handler: ProxyHandler<object> = {
     get(target, prop, receiver) {
@@ -119,7 +119,7 @@ function wrapNamespace(
           prop as string,
           telemetryClient,
           config,
-          proxyActive
+          proxyActive,
         );
       }
 
@@ -139,21 +139,21 @@ function wrapMethod(
   methodName: string,
   telemetryClient: TelemetryClient,
   config: FullConfig,
-  proxyActive: boolean
+  proxyActive: boolean,
 ): Function {
   return async function wrapped(...args: unknown[]) {
     const requestId = generateRequestId();
     const timestampStart = new Date().toISOString();
     const params = args[0] as Record<string, unknown> | undefined;
 
-    // If proxy is active, add SKEW headers to the request
+    // If proxy is active, add langmesh headers to the request
     if (proxyActive && params) {
       const headers = (params.headers as Record<string, string>) || {};
       params.headers = {
         ...headers,
-        "X-SKEW-API-Key": config.apiKey,
-        "X-SKEW-Request-ID": requestId,
-        "X-SKEW-Org-ID": config.orgId || "",
+        "X-langmesh-API-Key": config.apiKey,
+        "X-langmesh-Request-ID": requestId,
+        "X-langmesh-Org-ID": config.orgId || "",
       };
     }
 
@@ -170,7 +170,7 @@ function wrapMethod(
         params,
         result,
         null,
-        proxyActive
+        proxyActive,
       ).catch(() => {});
 
       return result;
@@ -185,7 +185,7 @@ function wrapMethod(
         params,
         null,
         error,
-        proxyActive
+        proxyActive,
       ).catch(() => {});
 
       // Always rethrow original error unchanged
@@ -203,7 +203,7 @@ async function buildAndSendTelemetry(
   params: Record<string, unknown> | undefined,
   result: unknown,
   error: unknown,
-  proxyActive: boolean
+  proxyActive: boolean,
 ): Promise<void> {
   const timestampEnd = new Date().toISOString();
   const latencyMs =

@@ -1,14 +1,16 @@
 // @ts-nocheck
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import OpenAI, { __resetSkewModelCacheForTests } from "./index";
+import OpenAI, { __resetlangmeshModelCacheForTests } from "./index";
 
-describe("@skew/openai", () => {
+describe("@langmesh/openai", () => {
   let client: OpenAI;
   let fetchMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    __resetSkewModelCacheForTests();
-    fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ models: [] }) });
+    __resetlangmeshModelCacheForTests();
+    fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ models: [] }) });
     vi.spyOn(globalThis, "fetch").mockImplementation(fetchMock as any);
 
     client = new OpenAI({
@@ -51,8 +53,8 @@ describe("@skew/openai", () => {
     expect(response.choices[0].message.content).toBe("Hello");
   });
 
-  it("should collect telemetry when SKEW_API_KEY is set", async () => {
-    process.env.SKEW_API_KEY = "test-skew-key";
+  it("should collect telemetry when langmesh_API_KEY is set", async () => {
+    process.env.langmesh_API_KEY = "test-langmesh-key";
 
     const clientWithTelemetry = new OpenAI({
       apiKey: "test-key",

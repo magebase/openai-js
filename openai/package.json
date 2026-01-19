@@ -1,7 +1,7 @@
 {
-  "name": "@skew/openai",
+  "name": "@langmesh/openai",
   "version": "1.0.0",
-  "description": "SKEW SDK for OpenAI - Telemetry and cost optimization",
+  "description": "langmesh SDK for OpenAI - Telemetry and cost optimization",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -24,7 +24,7 @@
   },
   "keywords": [
     "openai",
-    "skew",
+    "langmesh",
     "llm",
     "cost-optimization",
     "telemetry",
@@ -32,16 +32,16 @@
     "gpt",
     "proxy"
   ],
-  "author": "SKEW",
+  "author": "langmesh",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/skew-ai/skew-sdks.git",
+    "url": "https://github.com/langmesh-ai/langmesh-sdks.git",
     "directory": "sdks/javascript/openai"
   },
-  "homepage": "https://skew.ai/docs/sdk/javascript",
+  "homepage": "https://langmesh.ai/docs/sdk/javascript",
   "bugs": {
-    "url": "https://github.com/skew-ai/skew-sdks/issues"
+    "url": "https://github.com/langmesh-ai/langmesh-sdks/issues"
   },
   "peerDependencies": {
     "openai": ">=4.0.0"

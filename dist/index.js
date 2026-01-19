@@ -1,6 +1,6 @@
 "use strict";
 /**
- * @skew/openai - Drop-in replacement for OpenAI client
+ * @langmesh/openai - Drop-in replacement for OpenAI client
  *
  * Usage:
  * ```typescript
@@ -8,7 +8,7 @@
  * import OpenAI from "openai";
  *
  * // After
- * import OpenAI from "@skew/openai";
+ * import OpenAI from "@langmesh/openai";
  *
  * const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
  * // Works exactly the same!
@@ -34,40 +34,40 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const openai_1 = __importDefault(require("openai"));
 // Configuration from environment
-const SKEW_API_KEY = process.env.SKEW_API_KEY || "";
-const SKEW_TELEMETRY_ENDPOINT = process.env.SKEW_TELEMETRY_ENDPOINT || "https://api.skew.ai/v1/telemetry";
-const SKEW_PROXY_ENABLED = process.env.SKEW_PROXY_ENABLED === "true";
-const SKEW_BASE_URL = process.env.SKEW_BASE_URL || "https://api.skew.ai/v1/openai";
-const SKEW_MODELS_ENDPOINT = process.env.SKEW_MODELS_ENDPOINT || "https://api.skew.ai/v1/models/latest";
+const langmesh_API_KEY = process.env.langmesh_API_KEY || "";
+const langmesh_TELEMETRY_ENDPOINT = process.env.langmesh_TELEMETRY_ENDPOINT || "https://api.langmesh.ai/v1/telemetry";
+const langmesh_PROXY_ENABLED = process.env.langmesh_PROXY_ENABLED === "true";
+const langmesh_BASE_URL = process.env.langmesh_BASE_URL || "https://api.langmesh.ai/v1/openai";
+const langmesh_MODELS_ENDPOINT = process.env.langmesh_MODELS_ENDPOINT || "https://api.langmesh.ai/v1/models/latest";
 let cachedModels = null;
 let lastFetchTime = 0;
 const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
 /**
- * SKEW-wrapped OpenAI client
+ * langmesh-wrapped OpenAI client
  *
  * Transparently adds:
  * - Telemetry collection (always on, privacy-preserving)
- * - Proxy routing (only when SKEW_PROXY_ENABLED=true)
+ * - Proxy routing (only when langmesh_PROXY_ENABLED=true)
  */
 class OpenAI extends openai_1.default {
     constructor(options = {}) {
-        // If proxy is enabled, route through SKEW
-        const clientOptions = SKEW_PROXY_ENABLED
+        // If proxy is enabled, route through langmesh
+        const clientOptions = langmesh_PROXY_ENABLED
             ? {
                 ...options,
-                baseURL: SKEW_BASE_URL,
+                baseURL: langmesh_BASE_URL,
                 defaultHeaders: {
                     ...options.defaultHeaders,
-                    "X-SKEW-API-Key": SKEW_API_KEY,
-                    "X-SKEW-Original-API-Key": options.apiKey || "",
+                    "X-langmesh-API-Key": langmesh_API_KEY,
+                    "X-langmesh-Original-API-Key": options.apiKey || "",
                 },
             }
             : options;
         super(clientOptions);
         this.telemetryBuffer = [];
         this.flushInterval = null;
-        this.skewApiKey = SKEW_API_KEY;
-        this.telemetryEnabled = !!SKEW_API_KEY;
+        this.langmeshApiKey = langmesh_API_KEY;
+        this.telemetryEnabled = !!langmesh_API_KEY;
         if (this.telemetryEnabled) {
             this.startTelemetry();
             this.fetchModelsSnapshot(); // Fetch on init
@@ -82,9 +82,9 @@ class OpenAI extends openai_1.default {
             return; // Use cached data
         }
         try {
-            const response = await fetch(SKEW_MODELS_ENDPOINT, {
+            const response = await fetch(langmesh_MODELS_ENDPOINT, {
                 headers: {
-                    Authorization: `Bearer ${this.skewApiKey}`,
+                    Authorization: `Bearer ${this.langmeshApiKey}`,
                 },
                 signal: AbortSignal.timeout(5000),
             });
@@ -180,11 +180,11 @@ class OpenAI extends openai_1.default {
         const batch = [...this.telemetryBuffer];
         this.telemetryBuffer = [];
         try {
-            await fetch(SKEW_TELEMETRY_ENDPOINT, {
+            await fetch(langmesh_TELEMETRY_ENDPOINT, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Authorization: `Bearer ${this.skewApiKey}`,
+                    Authorization: `Bearer ${this.langmeshApiKey}`,
                 },
                 body: JSON.stringify({ events: batch }),
                 signal: AbortSignal.timeout(5000),

@@ -1,12 +1,12 @@
 /**
- * SKEW SDK Types
+ * langmesh SDK Types
  */
 
 /**
  * SDK configuration
  */
-export interface SkewConfig {
-  /** SKEW API key */
+export interface langmeshConfig {
+  /** langmesh API key */
   apiKey: string;
 
   /** Organization ID (auto-detected from key if not provided) */
@@ -109,7 +109,7 @@ export interface TelemetryContext {
 /**
  * Wrapper interface
  */
-export interface SkewWrapper<T> {
+export interface langmeshWrapper<T> {
   /** The wrapped client */
   client: T;
 
@@ -139,28 +139,29 @@ export const DEFAULT_TELEMETRY_CONFIG: TelemetryConfig = {
   sampleRate: 1.0,
   batchSize: 10,
   flushIntervalMs: 5000,
-  endpoint: "https://api.skew.ai/v1/telemetry",
+  endpoint: "https://api.langmesh.ai/v1/telemetry",
 };
 
 export const DEFAULT_PROXY_CONFIG: ProxyConfig = {
   enabled: false,
   failOpen: true,
-  baseUrl: "https://api.skew.ai/v1/openai",
+  baseUrl: "https://api.langmesh.ai/v1/openai",
   timeoutMs: 30000,
 };
 
 /**
  * Model pricing (per 1M tokens)
  */
-export const MODEL_PRICING: Record<string, { input: number; output: number }> = {
-  "gpt-4o": { input: 2.5, output: 10.0 },
-  "gpt-4o-mini": { input: 0.15, output: 0.6 },
-  "gpt-4-turbo": { input: 10.0, output: 30.0 },
-  "gpt-4": { input: 30.0, output: 60.0 },
-  "gpt-3.5-turbo": { input: 0.5, output: 1.5 },
-  "o1": { input: 15.0, output: 60.0 },
-  "o1-mini": { input: 3.0, output: 12.0 },
-  "o3-mini": { input: 1.1, output: 4.4 },
-  "text-embedding-3-small": { input: 0.02, output: 0 },
-  "text-embedding-3-large": { input: 0.13, output: 0 },
-};
+export const MODEL_PRICING: Record<string, { input: number; output: number }> =
+  {
+    "gpt-4o": { input: 2.5, output: 10.0 },
+    "gpt-4o-mini": { input: 0.15, output: 0.6 },
+    "gpt-4-turbo": { input: 10.0, output: 30.0 },
+    "gpt-4": { input: 30.0, output: 60.0 },
+    "gpt-3.5-turbo": { input: 0.5, output: 1.5 },
+    o1: { input: 15.0, output: 60.0 },
+    "o1-mini": { input: 3.0, output: 12.0 },
+    "o3-mini": { input: 1.1, output: 4.4 },
+    "text-embedding-3-small": { input: 0.02, output: 0 },
+    "text-embedding-3-large": { input: 0.13, output: 0 },
+  };

@@ -1,7 +1,7 @@
 {
-  "name": "@skew/openai",
+  "name": "@langmesh/openai",
   "version": "1.0.0",
-  "description": "SKEW-wrapped OpenAI client - drop-in replacement with telemetry and cost optimization",
+  "description": "langmesh-wrapped OpenAI client - drop-in replacement with telemetry and cost optimization",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -10,12 +10,12 @@
   },
   "keywords": [
     "openai",
-    "skew",
+    "langmesh",
     "cost-optimization",
     "telemetry",
     "llm"
   ],
-  "author": "SKEW",
+  "author": "langmesh",
   "license": "MIT",
   "peerDependencies": {
     "openai": "^4.0.0"
@@ -35,6 +35,6 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/skew-ai/openai-js"
+    "url": "https://github.com/langmesh-ai/openai-js"
   }
 }

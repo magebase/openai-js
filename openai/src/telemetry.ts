@@ -1,5 +1,5 @@
 /**
- * SKEW Telemetry Client
+ * langmesh Telemetry Client
  *
  * Async, non-blocking telemetry submission
  */
@@ -71,8 +71,8 @@ export class TelemetryClient {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${this.apiKey}`,
-          "X-SKEW-SDK-Version": "1.0.0",
-          "X-SKEW-SDK-Language": "javascript",
+          "X-langmesh-SDK-Version": "1.0.0",
+          "X-langmesh-SDK-Language": "javascript",
         },
         body: JSON.stringify({ events: batch }),
         signal: controller.signal,
@@ -80,7 +80,7 @@ export class TelemetryClient {
 
       if (!response.ok) {
         // Log but don't throw
-        console.debug?.(`[SKEW] Telemetry failed: ${response.status}`);
+        console.debug?.(`[langmesh] Telemetry failed: ${response.status}`);
       }
     } finally {
       clearTimeout(timeout);
@@ -148,7 +148,7 @@ export async function hashPrompt(prompt: string): Promise<string> {
 export function calculateCost(
   model: string,
   promptTokens: number,
-  completionTokens: number
+  completionTokens: number,
 ): number {
   const pricing: Record<string, { input: number; output: number }> = {
     "gpt-4o": { input: 2.5, output: 10.0 },

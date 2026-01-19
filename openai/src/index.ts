@@ -1,18 +1,18 @@
 /**
- * @skew/openai - SKEW SDK for OpenAI
+ * @langmesh/openai - langmesh SDK for OpenAI
  *
  * Telemetry and cost optimization without touching your traffic.
  *
  * Core Promise:
- * "SKEW will never touch user traffic unless explicitly configured to do so."
+ * "langmesh will never touch user traffic unless explicitly configured to do so."
  */
 
-export { skewWrap } from "./wrapper";
+export { langmeshWrap } from "./wrapper";
 export { TelemetryClient } from "./telemetry";
 export type {
-  SkewConfig,
+  langmeshConfig,
   TelemetryConfig,
   ProxyConfig,
   TelemetryPayload,
-  SkewWrapper,
+  langmeshWrapper,
 } from "./types";

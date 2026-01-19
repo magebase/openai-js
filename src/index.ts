@@ -1,5 +1,5 @@
 /**
- * @skew/openai - Drop-in replacement for OpenAI client
+ * @langmesh/openai - Drop-in replacement for OpenAI client
  *
  * Usage:
  * ```typescript
@@ -7,7 +7,7 @@
  * import OpenAI from "openai";
  *
  * // After
- * import OpenAI from "@skew/openai";
+ * import OpenAI from "@langmesh/openai";
  *
  * const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
  * // Works exactly the same!
@@ -19,13 +19,16 @@ import type { ClientOptions } from "openai";
 
 function getEnvConfig() {
   return {
-    skewApiKey: process.env.SKEW_API_KEY || "",
+    langmeshApiKey: process.env.langmesh_API_KEY || "",
     telemetryEndpoint:
-      process.env.SKEW_TELEMETRY_ENDPOINT || "https://api.skew.ai/v1/telemetry",
-    proxyEnabled: process.env.SKEW_PROXY_ENABLED === "true",
-    baseUrl: process.env.SKEW_BASE_URL || "https://api.skew.ai/v1/openai",
+      process.env.langmesh_TELEMETRY_ENDPOINT ||
+      "https://api.langmesh.ai/v1/telemetry",
+    proxyEnabled: process.env.langmesh_PROXY_ENABLED === "true",
+    baseUrl:
+      process.env.langmesh_BASE_URL || "https://api.langmesh.ai/v1/openai",
     modelsEndpoint:
-      process.env.SKEW_MODELS_ENDPOINT || "https://api.skew.ai/v1/models/latest",
+      process.env.langmesh_MODELS_ENDPOINT ||
+      "https://api.langmesh.ai/v1/models/latest",
   };
 }
 
@@ -48,20 +51,20 @@ let cachedModels: ModelSnapshot | null = null;
 let lastFetchTime: number = 0;
 const CACHE_DURATION_MS = 60 * 60 * 1000; // 1 hour
 
-export function __resetSkewModelCacheForTests() {
+export function __resetlangmeshModelCacheForTests() {
   cachedModels = null;
   lastFetchTime = 0;
 }
 
 /**
- * SKEW-wrapped OpenAI client
+ * langmesh-wrapped OpenAI client
  *
  * Transparently adds:
  * - Telemetry collection (always on, privacy-preserving)
- * - Proxy routing (only when SKEW_PROXY_ENABLED=true)
+ * - Proxy routing (only when langmesh_PROXY_ENABLED=true)
  */
 class OpenAI extends OriginalOpenAI {
-  private skewApiKey: string;
+  private langmeshApiKey: string;
   private telemetryEnabled: boolean;
   private telemetryEndpoint: string;
   private modelsEndpoint: string;
@@ -74,7 +77,7 @@ class OpenAI extends OriginalOpenAI {
       options.dangerouslyAllowBrowser ??
       (process.env.NODE_ENV === "test" || process.env.VITEST === "true");
 
-    // If proxy is enabled, route through SKEW
+    // If proxy is enabled, route through langmesh
     const clientOptions: ClientOptions = envConfig.proxyEnabled
       ? {
           ...options,
@@ -82,8 +85,8 @@ class OpenAI extends OriginalOpenAI {
           dangerouslyAllowBrowser: allowBrowser,
           defaultHeaders: {
             ...options.defaultHeaders,
-            "X-SKEW-API-Key": envConfig.skewApiKey,
-            "X-SKEW-Original-API-Key": options.apiKey || "",
+            "X-langmesh-API-Key": envConfig.langmeshApiKey,
+            "X-langmesh-Original-API-Key": options.apiKey || "",
           },
         }
       : {
@@ -94,12 +97,13 @@ class OpenAI extends OriginalOpenAI {
     super(clientOptions);
 
     if (envConfig.proxyEnabled && clientOptions.defaultHeaders) {
-      (this as unknown as { defaultHeaders?: Record<string, string> }).defaultHeaders =
-        clientOptions.defaultHeaders as Record<string, string>;
+      (
+        this as unknown as { defaultHeaders?: Record<string, string> }
+      ).defaultHeaders = clientOptions.defaultHeaders as Record<string, string>;
     }
 
-    this.skewApiKey = envConfig.skewApiKey;
-    this.telemetryEnabled = !!envConfig.skewApiKey;
+    this.langmeshApiKey = envConfig.langmeshApiKey;
+    this.telemetryEnabled = !!envConfig.langmeshApiKey;
     this.telemetryEndpoint = envConfig.telemetryEndpoint;
     this.modelsEndpoint = envConfig.modelsEndpoint;
 
@@ -123,7 +127,7 @@ class OpenAI extends OriginalOpenAI {
     try {
       const response = await fetch(this.modelsEndpoint, {
         headers: {
-          Authorization: `Bearer ${this.skewApiKey}`,
+          Authorization: `Bearer ${this.langmeshApiKey}`,
         },
         signal: AbortSignal.timeout(5000),
       });
@@ -163,7 +167,7 @@ class OpenAI extends OriginalOpenAI {
 
   private wrapChatCompletions(): void {
     const originalCreate = this.chat.completions.create.bind(
-      this.chat.completions
+      this.chat.completions,
     );
 
     this.chat.completions.create = (async (body: any, options?: any) => {
@@ -193,7 +197,7 @@ class OpenAI extends OriginalOpenAI {
             cost_estimate_usd: this.estimateCost(
               body.model,
               result.usage?.prompt_tokens || 0,
-              result.usage?.completion_tokens || 0
+              result.usage?.completion_tokens || 0,
             ),
             status: "success",
           });
@@ -248,7 +252,7 @@ class OpenAI extends OriginalOpenAI {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.skewApiKey}`,
+          Authorization: `Bearer ${this.langmeshApiKey}`,
         },
         body: JSON.stringify({ events: batch }),
         signal: AbortSignal.timeout(5000),
@@ -267,7 +271,7 @@ class OpenAI extends OriginalOpenAI {
   private estimateCost(
     model: string,
     promptTokens: number,
-    completionTokens: number
+    completionTokens: number,
   ): number {
     const modelPricing = this.getModelPricing(model);
     return (

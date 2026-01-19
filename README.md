@@ -1,15 +1,15 @@
-# @skew/openai
+# @langmesh/openai
 
 Drop-in replacement for the OpenAI JavaScript/TypeScript client with automatic cost optimization and telemetry.
 
 ## Installation
 
 ```bash
-npm install @skew/openai
+npm install @langmesh/openai
 # or
-yarn add @skew/openai
+yarn add @langmesh/openai
 # or
-pnpm add @skew/openai
+pnpm add @langmesh/openai
 ```
 
 ## Usage
@@ -21,7 +21,7 @@ Change one line of code:
 import OpenAI from "openai";
 
 // After
-import OpenAI from "@skew/openai";
+import OpenAI from "@langmesh/openai";
 
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -37,46 +37,53 @@ That's it. No configuration needed.
 ## What It Does
 
 ### Telemetry (Always On)
+
 - Tracks token usage, cost, and latency
 - Privacy-preserving (no prompts sent by default)
 - Zero performance impact (async)
 - Never breaks your app (fail-safe)
 
 ### Cost Optimization (Opt-In)
-When you enable policies in the SKEW dashboard:
+
+When you enable policies in the langmesh dashboard:
+
 - Automatic model downgrading for simple queries
 - Retry storm suppression
-- Semantic caching
+- Exact Cache (identical requests)
+- Semantic Deduplication (high-threshold reuse)
+- Semantic Answer Cache (advanced, opt-in)
 - Token optimization
 
 ## Configuration
 
 ### Required
+
 ```bash
-SKEW_API_KEY=sk_live_...  # Get from dashboard.skew.ai
+langmesh_API_KEY=sk_live_...  # Get from dashboard.langmesh.ai
 ```
 
 ### Optional
+
 ```bash
-SKEW_PROXY_ENABLED=true  # Enable when policies require routing
-SKEW_BASE_URL=https://api.skew.ai/v1/openai  # Custom proxy URL
+langmesh_PROXY_ENABLED=true  # Enable when policies require routing
+langmesh_BASE_URL=https://api.langmesh.ai/v1/openai  # Custom proxy URL
 ```
 
 ## Migration Path
 
-1. **Install** - `npm install @skew/openai`
-2. **Replace import** - Change `"openai"` to `"@skew/openai"`
-3. **Set API key** - `export SKEW_API_KEY=sk_live_...`
-4. **See savings** - Visit dashboard.skew.ai
-5. **Enable policies** - When ready, set `SKEW_PROXY_ENABLED=true`
+1. **Install** - `npm install @langmesh/openai`
+2. **Replace import** - Change `"openai"` to `"@langmesh/openai"`
+3. **Set API key** - `export langmesh_API_KEY=sk_live_...`
+4. **See savings** - Visit dashboard.langmesh.ai
+5. **Enable policies** - When ready, set `langmesh_PROXY_ENABLED=true`
 
 ## Guarantees
 
-✅ Drop-in replacement - works identically  
-✅ No behavior changes without opt-in  
-✅ Fail-safe - errors don't break your app  
-✅ Reversible - uninstall anytime  
-✅ Privacy-first - no prompts sent by default  
+✅ Drop-in replacement - works identically
+✅ No behavior changes without opt-in
+✅ Fail-safe - errors don't break your app
+✅ Reversible - uninstall anytime
+✅ Privacy-first - no prompts sent by default
 
 ## License
 
